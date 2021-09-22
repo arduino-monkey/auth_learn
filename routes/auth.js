@@ -17,17 +17,21 @@ router.post('/register', async (req, res) => {
     const salt = await bcrypt.genSalt();
     const hashPassword = await bcrypt.hash(req.body.password, salt);
 
+    //create confirmation token
+    const token = jwt.sign({id: req.body.id}, process.env.TOKEN_SECRET);
 
     //create a new user
     const user = new User({
         name: req.body.name,
         email: req.body.email,
         password: hashPassword
-    })
+    });
+
+    const link = `http://localhost:3000/confirmation/${token}`;
 
     try{
         await user.save();
-        res.send({user: user._id});  
+        res.send({link: link});  
     }catch(err){
         res.status(400).send(err);
     }
@@ -41,6 +45,10 @@ router.post('/login', async (req, res) => {
     const user = await User.findOne({email: req.body.email});
     if (!user) return res.status(400).send('Email doesnot exist');
 
+    // check if user has verified email
+    // if (!user.confirmed) return res.status(401).send('Confirm Email First');
+
+    //check password
     const validPass = await bcrypt.compare(req.body.password, user.password);
     if (!validPass) return res.status(400).send('Wrong PassWord');
 
