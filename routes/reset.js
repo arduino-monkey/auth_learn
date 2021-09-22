@@ -2,6 +2,7 @@ const router = require('express').Router();
 const User = require('../model/User');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
+const {passwordResetValidation} = require('../validation');
 
 router.post('/forgot-password', async (req, res) => {
     const user = await User.findOne({email: req.body.email});
@@ -19,9 +20,13 @@ router.post('/forgot-password', async (req, res) => {
 router.post('/reset-password/:id/:token', async (req, res) => {
     const {id, token} = req.params;
 
+    //find user in DB
     const user = await User.findOne({_id: id});
-
     if(!user) return res.status(400).send('User doesnot exist');
+
+    //validate new password
+    const {error} = passwordResetValidation(req.body); 
+    if (error) return res.status(400).send(error.details[0].message);
 
     const secret = process.env.TOKEN_SECRET + user.password;
     

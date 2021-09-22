@@ -18,5 +18,13 @@ const loginValidation = data => {
     return schema.validate(data);
 };
 
+const passwordResetValidation = data => {
+    const schema = Joi.object({
+        newPassword: Joi.string().min(6).required()
+    });
+    return schema.validate(data);
+};
+
 module.exports.registerValidation = registerValidation;
 module.exports.loginValidation = loginValidation;
+module.exports.passwordResetValidation = passwordResetValidation;
