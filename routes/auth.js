@@ -46,7 +46,11 @@ router.post('/login', async (req, res) => {
     if (!user) return res.status(400).send('Email doesnot exist');
 
     // check if user has verified email
-    if (!user.confirmed) return res.status(401).send('Confirm Email First');
+    if (!user.confirmed){
+        const token = jwt.sign({id: user._id}, process.env.TOKEN_SECRET, {expiresIn: '15m'});
+        const link = `http://localhost:3000/api/user/confirmation/${token}`;
+        return res.send({message: "confirm Email First", link: link});
+    }
 
     //check password
     const validPass = await bcrypt.compare(req.body.password, user.password);
