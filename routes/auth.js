@@ -17,9 +17,6 @@ router.post('/register', async (req, res) => {
     const salt = await bcrypt.genSalt();
     const hashPassword = await bcrypt.hash(req.body.password, salt);
 
-    //create confirmation token
-    const token = jwt.sign({id: req.body.id}, process.env.TOKEN_SECRET);
-
     //create a new user
     const user = new User({
         name: req.body.name,
@@ -27,7 +24,10 @@ router.post('/register', async (req, res) => {
         password: hashPassword
     });
 
-    const link = `http://localhost:3000/confirmation/${token}`;
+    //create confirmation token
+    const token = jwt.sign({id: user._id}, process.env.TOKEN_SECRET, {expiresIn: '15m'});
+
+    const link = `http://localhost:3000/api/user/confirmation/${token}`;
 
     try{
         await user.save();
@@ -46,7 +46,7 @@ router.post('/login', async (req, res) => {
     if (!user) return res.status(400).send('Email doesnot exist');
 
     // check if user has verified email
-    // if (!user.confirmed) return res.status(401).send('Confirm Email First');
+    if (!user.confirmed) return res.status(401).send('Confirm Email First');
 
     //check password
     const validPass = await bcrypt.compare(req.body.password, user.password);
